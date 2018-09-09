@@ -19,8 +19,8 @@ func Load(vm *otto.Otto, src io.Reader) (*Config, []*js.TestConfig, error) {
 	ctx := new(ctx)
 
 	configVM.Set("settings", ctx.ottoFuncSettings)
-	//configVM.Set("file", ctx.ottoFuncFile)
-	//configVM.Set("register_test", ctx.ottoFuncRegisterTest)
+	configVM.Set("file", ctx.ottoFuncFile)
+	configVM.Set("register_test", ctx.ottoFuncRegisterTest)
 
 	// TODO: Load stdlib here
 
