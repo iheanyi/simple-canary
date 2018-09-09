@@ -1,6 +1,11 @@
 package js
 
-import "time"
+import (
+	"net/http"
+	"time"
+
+	"github.com/robertkrimen/otto"
+)
 
 // A TestConfig describes how a class of tests must be run.
 type TestConfig struct {
@@ -14,4 +19,20 @@ type TestConfig struct {
 type Test struct {
 	Name   string
 	Script *otto.Script
+}
+
+func (cfg *TestConfig) Tests() []*Test {
+	var out []*Test
+
+	out = append(out, &Test{
+		Name:   cfg.Name,
+		Script: cfg.Script,
+	})
+
+	return out
+}
+
+// A Context holds instantiated objects required to run a test.
+type Context struct {
+	HTTPClient *http.Client
 }

@@ -8,14 +8,19 @@ import (
 
 	"github.com/iheanyi/simple-canary/internal/js"
 	"github.com/iheanyi/simple-canary/internal/js/ottoutil"
+	"github.com/robertkrimen/otto"
 )
 
+// Load a Javascript config script, returning all the TestConfigs that
+// are defined in it. The given VM is left unchanged, but it's context
+// is available during parsing of the config script.
 func Load(vm *otto.Otto, src io.Reader) (*Config, []*js.TestConfig, error) {
 	configVM := vm.Copy() // avoid polluting the global namespace
 	ctx := new(ctx)
 
-	configVM.set("file", ctx.ottoFuncFile)
-	configVM.set("register_test", ctx.ottoFuncRegisterTest)
+	configVM.Set("settings", ctx.ottoFuncSettings)
+	//configVM.Set("file", ctx.ottoFuncFile)
+	//configVM.Set("register_test", ctx.ottoFuncRegisterTest)
 
 	// TODO: Load stdlib here
 
@@ -35,7 +40,9 @@ func Load(vm *otto.Otto, src io.Reader) (*Config, []*js.TestConfig, error) {
 }
 
 // Config holds the global canary configuration.
-type Config struct{}
+type Config struct {
+	Name string
+}
 
 type ctx struct {
 	cfg   *Config
@@ -79,6 +86,18 @@ func (ctx *ctx) ottoFuncRegisterTest(call otto.FunctionCall) otto.Value {
 	return otto.UndefinedValue()
 }
 
+func (cfg *Config) load(vm *otto.Otto, config otto.Value) {
+	ottoutil.LoadObject(vm, config, map[string]func(otto.Value) error{
+		"name": func(v otto.Value) (err error) {
+			cfg.Name, err = v.ToString()
+			if err == nil && cfg.Name == "undefined" {
+				cfg.Name = ""
+			}
+			return
+		},
+	})
+}
+
 func (cfg *testConfig) load(vm *otto.Otto, config otto.Value) {
 	ottoutil.LoadObject(vm, config, map[string]func(otto.Value) error{
 		"name": func(v otto.Value) (err error) {
@@ -94,4 +113,11 @@ func (cfg *testConfig) load(vm *otto.Otto, config otto.Value) {
 			return nil
 		},
 	})
+}
+
+func (ctx *ctx) ottoFuncSettings(call otto.FunctionCall) otto.Value {
+	cfg := new(Config)
+	cfg.load(call.Otto, call.Argument(0))
+	ctx.cfg = cfg
+	return otto.UndefinedValue()
 }
