@@ -11,7 +11,7 @@ import (
 )
 
 // LoadLog loads a log package in the VM that logs to the given logger
-func LoadLog(vm *otto.Otto, pkgname string, ll *log.Entry) error {
+func LoadLog(vm *otto.Otto, pkgname string, ll log.FieldLogger) error {
 	// Setup the logging formatter to be structured as JSON formatted.
 	log.SetFormatter(&log.JSONFormatter{})
 	// Output the stdout for capturing.
