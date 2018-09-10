@@ -13,3 +13,12 @@ register_test(
   },
   file('simple-example.js')
 );
+
+register_test(
+  {
+    name: 'http demonstration',
+    frequency: frequency,
+    timeout: timeout,
+  },
+  file('simple-http.js')
+);
