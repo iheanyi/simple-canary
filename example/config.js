@@ -22,3 +22,21 @@ register_test(
   },
   file('simple-http.js')
 );
+
+register_test(
+  {
+    name: 'always pass',
+    frequency: frequency,
+    timeout: timeout,
+  },
+  file('always-pass.js')
+);
+
+register_test(
+  {
+    name: 'always fail',
+    frequency: frequency,
+    timeout: timeout,
+  },
+  file('always-fail.js')
+);

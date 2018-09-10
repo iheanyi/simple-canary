@@ -78,7 +78,7 @@ func main() {
 					log.Fatalf("test %s failed", testCfg.Name)
 				}
 			}()
-			log.Printf("--- done")
+			log.Printf("\n--- done")
 		}
 	}
 }
