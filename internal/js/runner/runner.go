@@ -22,6 +22,10 @@ func Run(ctx context.Context, vm *otto.Otto, jsctx *js.Context, test *js.Test, i
 	if err := jscontext.LoadHTTP(testVM, "http", jsctx.HTTPClient, reqConfig); err != nil {
 		return fmt.Errorf("can't setup HTTP package in VM: %v", err)
 	}
+
+	if err := jscontext.LoadLog(testVM, "log", jsctx.Log); err != nil {
+		return fmt.Errorf("can't setup LOG package in VM: %v", err)
+	}
 	done := make(chan struct{})
 
 	go func() {

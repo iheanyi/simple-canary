@@ -11,6 +11,7 @@ import (
 	"github.com/iheanyi/simple-canary/internal/js/canary"
 	"github.com/iheanyi/simple-canary/internal/js/runner"
 	"github.com/robertkrimen/otto"
+	llog "github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -57,6 +58,7 @@ func main() {
 		ctx := context.Background()
 		for _, test := range testCfg.Tests() {
 			jsctx := &js.Context{
+				Log: llog.WithField("test", test.Name),
 				HTTPClient: &http.Client{
 					Transport: http.DefaultTransport,
 				},

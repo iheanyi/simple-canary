@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/robertkrimen/otto"
+	"github.com/sirupsen/logrus"
 )
 
 // A TestConfig describes how a class of tests must be run.
@@ -35,4 +36,5 @@ func (cfg *TestConfig) Tests() []*Test {
 // A Context holds instantiated objects required to run a test.
 type Context struct {
 	HTTPClient *http.Client
+	Log        *logrus.Entry
 }
