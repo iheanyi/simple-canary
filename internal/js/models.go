@@ -36,5 +36,5 @@ func (cfg *TestConfig) Tests() []*Test {
 // A Context holds instantiated objects required to run a test.
 type Context struct {
 	HTTPClient *http.Client
-	Log        *logrus.Entry
+	Log        logrus.FieldLogger
 }

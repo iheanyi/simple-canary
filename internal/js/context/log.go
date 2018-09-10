@@ -25,7 +25,7 @@ func LoadLog(vm *otto.Otto, pkgname string, ll *log.Entry) error {
 }
 
 type logger struct {
-	ll *log.Entry
+	ll log.FieldLogger
 }
 
 func (ll *logger) load(vm *otto.Otto) (otto.Value, error) {
