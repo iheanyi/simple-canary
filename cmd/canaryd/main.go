@@ -72,7 +72,6 @@ func runTestForever(vm *otto.Otto, cfg *js.TestConfig, test *js.Test) {
 				testID,
 				test.Name,
 				time.Now(),
-				dbpkg.Target{Region: test.Region, ImageSlug: test.Image},
 			)*/
 
 			ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout)
