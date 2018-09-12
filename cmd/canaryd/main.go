@@ -82,9 +82,10 @@ func runTestForever(vm *otto.Otto, cfg *js.TestConfig, test *js.Test) {
 			if terr != nil {
 				ll.WithError(terr).Error("test failed")
 			}
-
-			time.Sleep(cfg.Frequency)
 		}(vm.Copy()) // copy VM to avoid polluting global namespace
+
+		// We'll run the test again after the duration we defined.
+		time.Sleep(cfg.Frequency)
 	}
 }
 

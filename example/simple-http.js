@@ -1,4 +1,2 @@
-var response = http.do("GET", "https://icanhazip.com", [{
-  "Content-Type": "text/html"
-}], {});
-console.log(response.body);
+var response = http.do('GET', 'https://icanhazip.com');
+log.kv('body', response.body).info('this is the test output for ip stuff');
