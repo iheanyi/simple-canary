@@ -7,25 +7,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// TODO: Make sure Node satisifies the interface for registry.
+// Node is a wrapper around Prometheus's registerer interface
 type Node struct {
 	registry prometheus.Registerer
 }
 
-func NewCounter(name, description string) prometheus.Counter {
-	return prometheus.NewCounter(prometheus.CounterOpts{
-		Name: name,
-		Help: description,
-	})
-}
-
-func NewGauge(name, description string) prometheus.Gauge {
-	return prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: name,
-		Help: description,
-	})
-}
-
+// Prometheus returns an instance of the metrics node and the prometheus
+// handler.
 func Prometheus() (*Node, http.Handler) {
 	registry := prometheus.NewRegistry()
 	handler := promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
@@ -37,6 +25,8 @@ func Prometheus() (*Node, http.Handler) {
 	}, handler
 }
 
+// Labels returns a new instance of the metrics node with the added labels to
+// the registry.
 func (n *Node) Labels(labels map[string]string) *Node {
 	promLabels := prometheus.Labels(labels)
 	newNode := prometheus.WrapRegistererWith(promLabels, n.registry)
@@ -46,6 +36,7 @@ func (n *Node) Labels(labels map[string]string) *Node {
 	}
 }
 
+// Counter returns a new CounterVec on the metrics node.
 func (n *Node) Counter(name, description string, labels ...string) *prometheus.CounterVec {
 	counter := prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: name,
@@ -58,6 +49,7 @@ func (n *Node) Counter(name, description string, labels ...string) *prometheus.C
 	return counter
 }
 
+// Gauge returns a new Gauge on the metrics node.
 func (n *Node) Gauge(name, description string) prometheus.Gauge {
 	gauge := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: name,
@@ -68,6 +60,7 @@ func (n *Node) Gauge(name, description string) prometheus.Gauge {
 	return gauge
 }
 
+// Summary returns a new SummaryVector on the metrics node.
 func (n *Node) Summary(name, description string, buckets []float64, labels ...string) *prometheus.SummaryVec {
 	calculatedBuckets := make(map[float64]float64, len(buckets))
 
@@ -79,6 +72,8 @@ func (n *Node) Summary(name, description string, buckets []float64, labels ...st
 		Help:       description,
 		Objectives: calculatedBuckets,
 	}, labels)
+
 	n.registry.MustRegister(summary)
+
 	return summary
 }
