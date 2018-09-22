@@ -15,8 +15,9 @@ import (
 	"github.com/iheanyi/simple-canary/internal/js"
 	"github.com/iheanyi/simple-canary/internal/js/canary"
 	"github.com/iheanyi/simple-canary/internal/js/runner"
+	"github.com/iheanyi/simple-canary/internal/metrics"
 	"github.com/pborman/uuid"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/robertkrimen/otto"
 	log "github.com/sirupsen/logrus"
 )
@@ -48,35 +49,46 @@ func main() {
 		vm  = otto.New()
 	)
 
+	met, hdl := metrics.Prometheus()
 	l := mustListen(*listenHost, *listenPort)
 	db := mustOpenBolt(*dbPath)
 	defer db.Close()
 
-	if err := launchHTTP(ctx, l, promhttp.Handler(), db); err != nil {
+	if err := launchHTTP(ctx, l, hdl, db); err != nil {
 		log.WithError(err).Fatal("can't launch http server")
 	}
 
 	canaryCfg, testCfgs := mustLoadConfigs(vm, *cfgPath)
 
-	launchTests(db, vm, canaryCfg, testCfgs)
+	launchTests(db, met, vm, canaryCfg, testCfgs)
 
 	// Block forever because we want the tests to run forever.
 	select {}
 }
 
-func launchTests(db dbpkg.CanaryStore, vm *otto.Otto, config *canary.Config, configs []*js.TestConfig) {
+func launchTests(db dbpkg.CanaryStore, met *metrics.Node, vm *otto.Otto, config *canary.Config, configs []*js.TestConfig) {
 	for _, cfg := range configs {
 		for _, test := range cfg.Tests() {
-			go runTestForever(db, vm, cfg, test)
+			go runTestForever(db, met, vm, cfg, test)
 		}
 	}
 }
 
-func runTestForever(db dbpkg.CanaryStore, vm *otto.Otto, cfg *js.TestConfig, test *js.Test) {
+func runTestForever(db dbpkg.CanaryStore, met *metrics.Node, vm *otto.Otto, cfg *js.TestConfig, test *js.Test) {
 	ll := log.WithFields(log.Fields{
 		"test.name": test.Name,
 	})
 
+	tmet := met.Labels(map[string]string{
+		"test_name": test.Name,
+	})
+
+	var (
+		started  = tmet.Counter("test_started_count", "Number of tests that were started")
+		finished = tmet.Counter("test_finished_count", "Number of tests that have finished", "result")
+		running  = tmet.Gauge("test_running_total", "Tests that are currently running")
+		_        = tmet.Summary("test_duration_seconds", "Duration of tests", []float64{0.5, 0.75, 0.9, 0.99, 1.0}, "result")
+	)
 	for {
 		go func(vm *otto.Otto) {
 			testID := uuid.New()
@@ -99,13 +111,19 @@ func runTestForever(db dbpkg.CanaryStore, vm *otto.Otto, cfg *js.TestConfig, tes
 			}
 
 			// TODO: Add started and running counter calls here.
+			started.WithLabelValues().Add(1)
+			running.Add(1)
+			defer running.Add(-1)
 			ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout)
 			defer cancel()
 
 			terr := runner.Run(ctx, vm, testCtx, test, testID)
 			if terr != nil {
 				// TODO: Add finished counter calls here with pass/fail
+				finished.With(prometheus.Labels{"result": "fail"}).Add(1)
 				ll.WithError(terr).Error("test failed")
+			} else {
+				finished.With(prometheus.Labels{"result": "pass"}).Add(1)
 			}
 
 			if err := db.EndTest(dbtest, terr, time.Now()); err != nil {
