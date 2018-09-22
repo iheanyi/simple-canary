@@ -25,4 +25,5 @@ type BoltTestInstance struct {
 	Pass      bool   `json:"pass,omitempty"`
 	FailCause string `json:"fail_cause,omitempty"`
 	// Logs         []*logspy.Event        `json:"logs,omitempty"`
+	// HTTPRequests []transport.TripRecord `json:"http_requests,omitempty"`
 }

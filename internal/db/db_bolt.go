@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
@@ -104,7 +103,6 @@ func insertTest(db *bolt.DB, test *TestInstance) error {
 			return err
 		}
 
-		log.Printf("successfully saved test")
 		return nil
 	})
 }
