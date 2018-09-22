@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"net/http"
 	"os"
 	"time"
 
@@ -66,6 +67,9 @@ func runTestForever(vm *otto.Otto, cfg *js.TestConfig, test *js.Test) {
 
 			testCtx := &js.Context{
 				Log: ll,
+				HTTPClient: &http.Client{
+					Transport: http.DefaultTransport,
+				},
 			}
 
 			/*dbtest, err := db.StartTest(
