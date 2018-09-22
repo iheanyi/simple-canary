@@ -50,6 +50,7 @@ func main() {
 
 	l := mustListen(*listenHost, *listenPort)
 	db := mustOpenBolt(*dbPath)
+	defer db.Close()
 
 	if err := launchHTTP(ctx, l, promhttp.Handler(), db); err != nil {
 		log.WithError(err).Fatal("can't launch http server")
