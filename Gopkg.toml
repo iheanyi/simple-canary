@@ -29,6 +29,10 @@
   branch = "master"
   name = "github.com/robertkrimen/otto"
 
+[[constraint]]
+  branch = "master"
+  name = "github.com/prometheus/client_golang"
+
 [prune]
   go-tests = true
   unused-packages = true
