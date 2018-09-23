@@ -1,0 +1,14 @@
+# .gqlgen.yml example
+#
+# Refer to https://gqlgen.com/config/
+# for detailed .gqlgen.yml documentation.
+
+schema: schema.graphql
+exec:
+  filename: generated.go
+models:
+  TestInstance:
+    model: github.com/iheanyi/simple-canary/internal/db.TestInstance
+resolver:
+  filename: resolver.go
+  type: Resolver

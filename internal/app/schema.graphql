@@ -1,0 +1,14 @@
+type TestInstance {
+  id: ID!
+  name: String!
+  start_at: Time!
+  end_at: Time
+  pass: Boolean
+  fail_cause: String
+}
+
+type Query {
+ tests: [TestInstance!]!
+}
+
+scalar Time
