@@ -27,3 +27,9 @@ type BoltTestInstance struct {
 	// Logs         []*logspy.Event        `json:"logs,omitempty"`
 	// HTTPRequests []transport.TripRecord `json:"http_requests,omitempty"`
 }
+
+type byStartBefore []TestInstance
+
+func (by byStartBefore) Len() int           { return len(by) }
+func (by byStartBefore) Less(i, j int) bool { return by[i].StartAt.Before(by[j].StartAt) }
+func (by byStartBefore) Swap(i, j int)      { by[i], by[j] = by[j], by[i] }

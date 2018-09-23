@@ -9,6 +9,8 @@ type TestInstance {
 
 type Query {
  tests: [TestInstance!]!
+ test(id: String!): TestInstance
+ ongoingTests: [TestInstance!]!
 }
 
 scalar Time

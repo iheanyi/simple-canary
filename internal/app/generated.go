@@ -41,7 +41,9 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Query struct {
-		Tests func(childComplexity int) int
+		Tests        func(childComplexity int) int
+		Test         func(childComplexity int, id string) int
+		OngoingTests func(childComplexity int) int
 	}
 
 	TestInstance struct {
@@ -56,6 +58,8 @@ type ComplexityRoot struct {
 
 type QueryResolver interface {
 	Tests(ctx context.Context) ([]db.TestInstance, error)
+	Test(ctx context.Context, id string) (*db.TestInstance, error)
+	OngoingTests(ctx context.Context) ([]db.TestInstance, error)
 }
 type TestInstanceResolver interface {
 	ID(ctx context.Context, obj *db.TestInstance) (string, error)
@@ -64,6 +68,21 @@ type TestInstanceResolver interface {
 	EndAt(ctx context.Context, obj *db.TestInstance) (*time.Time, error)
 
 	FailCause(ctx context.Context, obj *db.TestInstance) (*string, error)
+}
+
+func field_Query_test_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		var err error
+		arg0, err = graphql.UnmarshalString(tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+
 }
 
 func field_Query___type_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
@@ -130,6 +149,25 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Tests(childComplexity), true
+
+	case "Query.test":
+		if e.complexity.Query.Test == nil {
+			break
+		}
+
+		args, err := field_Query_test_args(rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Test(childComplexity, args["id"].(string)), true
+
+	case "Query.ongoingTests":
+		if e.complexity.Query.OngoingTests == nil {
+			break
+		}
+
+		return e.complexity.Query.OngoingTests(childComplexity), true
 
 	case "TestInstance.id":
 		if e.complexity.TestInstance.Id == nil {
@@ -234,6 +272,21 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				wg.Done()
 			}(i, field)
+		case "test":
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Query_test(ctx, field)
+				wg.Done()
+			}(i, field)
+		case "ongoingTests":
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Query_ongoingTests(ctx, field)
+				if out.Values[i] == graphql.Null {
+					invalid = true
+				}
+				wg.Done()
+			}(i, field)
 		case "__type":
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
@@ -259,6 +312,91 @@ func (ec *executionContext) _Query_tests(ctx context.Context, field graphql.Coll
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
 		return ec.resolvers.Query().Tests(ctx)
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]db.TestInstance)
+	rctx.Result = res
+
+	arr1 := make(graphql.Array, len(res))
+	var wg sync.WaitGroup
+
+	isLen1 := len(res) == 1
+	if !isLen1 {
+		wg.Add(len(res))
+	}
+
+	for idx1 := range res {
+		idx1 := idx1
+		rctx := &graphql.ResolverContext{
+			Index:  &idx1,
+			Result: &res[idx1],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(idx1 int) {
+			if !isLen1 {
+				defer wg.Done()
+			}
+			arr1[idx1] = func() graphql.Marshaler {
+
+				return ec._TestInstance(ctx, field.Selections, &res[idx1])
+			}()
+		}
+		if isLen1 {
+			f(idx1)
+		} else {
+			go f(idx1)
+		}
+
+	}
+	wg.Wait()
+	return arr1
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Query_test(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := field_Query_test_args(rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx := &graphql.ResolverContext{
+		Object: "Query",
+		Args:   args,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
+		return ec.resolvers.Query().Test(ctx, args["id"].(string))
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*db.TestInstance)
+	rctx.Result = res
+
+	if res == nil {
+		return graphql.Null
+	}
+
+	return ec._TestInstance(ctx, field.Selections, res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Query_ongoingTests(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Query",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
+		return ec.resolvers.Query().OngoingTests(ctx)
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1868,6 +2006,8 @@ var parsedSchema = gqlparser.MustLoadSchema(
 
 type Query {
  tests: [TestInstance!]!
+ test(id: String!): TestInstance
+ ongoingTests: [TestInstance!]!
 }
 
 scalar Time

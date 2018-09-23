@@ -27,6 +27,16 @@ func (r *queryResolver) Tests(ctx context.Context) ([]dbpkg.TestInstance, error)
 	return tests, err
 }
 
+func (r *queryResolver) Test(ctx context.Context, id string) (*dbpkg.TestInstance, error) {
+	test, err := r.db.FindTestByID(id)
+	return test, err
+}
+
+func (r *queryResolver) OngoingTests(ctx context.Context) ([]dbpkg.TestInstance, error) {
+	tests, err := r.db.ListOngoingTests()
+	return tests, err
+}
+
 type testInstanceResolver struct{ *Resolver }
 
 func (r *testInstanceResolver) ID(ctx context.Context, obj *dbpkg.TestInstance) (string, error) {

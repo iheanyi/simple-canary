@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 
@@ -98,6 +99,39 @@ func (db *boltStore) ListTests() ([]TestInstance, error) {
 	})
 
 	return tests, err
+}
+
+// FindTestByID finds a specific test given it's ID.
+func (db *boltStore) FindTestByID(id string) (*TestInstance, error) {
+	test := &TestInstance{}
+	err := db.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(testsBucket)
+		v := b.Get([]byte(id))
+
+		err := json.Unmarshal(v, test)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return test, err
+}
+
+// ListOngoingTests returns a list of ongoing tests. A test is ongong if it has
+// never be ended with EndTest.
+func (db *boltStore) ListOngoingTests() ([]TestInstance, error) {
+	var ongoing []TestInstance
+	func() {
+		db.ongoingMu.RLock()
+		defer db.ongoingMu.RUnlock()
+		for _, t := range db.ongoing {
+			ongoing = append(ongoing, t)
+		}
+	}()
+	sort.Sort(sort.Reverse(byStartBefore(ongoing)))
+	return ongoing, nil
 }
 
 func (db *boltStore) Close() error {
