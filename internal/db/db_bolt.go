@@ -78,6 +78,28 @@ func (db *boltStore) EndTest(test *TestInstance, failure error, endAt time.Time)
 	return insertTest(db.db, &t)
 }
 
+func (db *boltStore) ListTests() ([]TestInstance, error) {
+	tests := make([]TestInstance, 0)
+	err := db.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(testsBucket)
+
+		err := b.ForEach(func(k, v []byte) error {
+			test := TestInstance{}
+			err := json.Unmarshal(v, &test)
+			if err != nil {
+				return err
+			}
+
+			tests = append(tests, test)
+			return nil
+		})
+
+		return err
+	})
+
+	return tests, err
+}
+
 func (db *boltStore) Close() error {
 	return db.db.Close()
 }

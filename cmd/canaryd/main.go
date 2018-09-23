@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/iheanyi/simple-canary/internal/app"
 	dbpkg "github.com/iheanyi/simple-canary/internal/db"
 	"github.com/iheanyi/simple-canary/internal/js"
 	"github.com/iheanyi/simple-canary/internal/js/canary"
@@ -181,6 +182,7 @@ func launchHTTP(
 
 	r := mux.NewRouter().Host(host).Subrouter()
 
+	_ = app.New(db, r)
 	r.PathPrefix("/metrics").Handler(promhdl)
 
 	log.WithField("host", host).Info("API starting")
