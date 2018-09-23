@@ -1,12 +1,14 @@
 package canary
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"time"
 
 	"github.com/iheanyi/simple-canary/internal/js"
+	jsctx "github.com/iheanyi/simple-canary/internal/js/context"
 	"github.com/iheanyi/simple-canary/internal/js/ottoutil"
 	"github.com/robertkrimen/otto"
 )
@@ -22,7 +24,9 @@ func Load(vm *otto.Otto, src io.Reader) (*Config, []*js.TestConfig, error) {
 	configVM.Set("file", ctx.ottoFuncFile)
 	configVM.Set("register_test", ctx.ottoFuncRegisterTest)
 
-	// TODO: Load stdlib here
+	if err := jsctx.LoadStdLib(context.Background(), configVM, "std"); err != nil {
+		return nil, nil, fmt.Errorf("can't load stdlib: %v", err)
+	}
 
 	source, err := ioutil.ReadAll(src)
 	if err != nil {

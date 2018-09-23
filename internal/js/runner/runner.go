@@ -19,6 +19,10 @@ func Run(ctx context.Context, vm *otto.Otto, jsctx *js.Context, test *js.Test, i
 		return req.WithContext(ctx)
 	}
 
+	if err := jscontext.LoadStdLib(ctx, testVM, "std"); err != nil {
+		return fmt.Errorf("can't setup std package in VM: %v", err)
+	}
+
 	if err := jscontext.LoadHTTP(testVM, "http", jsctx.HTTPClient, reqConfig); err != nil {
 		return fmt.Errorf("can't setup HTTP package in VM: %v", err)
 	}
