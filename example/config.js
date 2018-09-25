@@ -40,3 +40,12 @@ register_test(
   },
   file('always-fail.js')
 );
+
+register_test(
+  {
+    name: 'error thrown',
+    frequency: frequency,
+    timeout: timeout,
+  },
+  file('fail-error.js')
+)
