@@ -145,6 +145,9 @@ func mustLoadConfigs(vm *otto.Otto, filename string) (*canary.Config, []*js.Test
 	defer cfg.Close()
 
 	canaryConfig, testCfgs, err := canary.Load(vm, cfg)
+	if err != nil {
+		log.WithError(err).Fatal("cannot load canary test configs")
+	}
 
 	return canaryConfig, testCfgs
 }
