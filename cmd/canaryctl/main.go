@@ -12,6 +12,8 @@ import (
 	"github.com/iheanyi/simple-canary/internal/js/runner"
 	"github.com/robertkrimen/otto"
 	llog "github.com/sirupsen/logrus"
+
+	_ "github.com/robertkrimen/otto/underscore"
 )
 
 func main() {
@@ -56,29 +58,29 @@ func main() {
 		}
 
 		ctx := context.Background()
-		for _, test := range testCfg.Tests() {
-			jsctx := &js.Context{
-				Log: llog.WithField("test", test.Name),
-				HTTPClient: &http.Client{
-					Transport: http.DefaultTransport,
-				},
-			}
+		test := testCfg.Test()
 
-			func() {
-				ctx, cancel := context.WithTimeout(ctx, testCfg.Timeout)
-				defer cancel()
-				err := runner.Run(ctx, vm, jsctx, test, "debug")
-				switch e := err.(type) {
-				case *otto.Error:
-					log.Print(e.String())
-				default:
-					log.Print(err)
-				}
-				if *failOnError {
-					log.Fatalf("test %s failed", testCfg.Name)
-				}
-			}()
-			log.Printf("\n--- done")
+		jsctx := &js.Context{
+			Log: llog.WithField("test", test.Name),
+			HTTPClient: &http.Client{
+				Transport: http.DefaultTransport,
+			},
 		}
+
+		func() {
+			ctx, cancel := context.WithTimeout(ctx, testCfg.Timeout)
+			defer cancel()
+			err := runner.Run(ctx, vm, jsctx, test, "debug")
+			switch e := err.(type) {
+			case *otto.Error:
+				log.Print(e.String())
+			default:
+				log.Print(err)
+			}
+			if *failOnError {
+				log.Fatalf("test %s failed", testCfg.Name)
+			}
+		}()
+		log.Printf("\n--- done")
 	}
 }

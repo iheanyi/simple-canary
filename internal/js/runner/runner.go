@@ -14,7 +14,6 @@ import (
 func Run(ctx context.Context, vm *otto.Otto, jsctx *js.Context, test *js.Test, id string) error {
 	testVM := vm.Copy()
 
-	// TODO: Configure logger, http, and stdlib helper libraries for this.
 	reqConfig := func(req *http.Request) *http.Request {
 		return req.WithContext(ctx)
 	}

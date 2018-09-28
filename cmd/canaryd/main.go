@@ -24,8 +24,6 @@ import (
 )
 
 func main() {
-	// TODO: Add Prometheus instantiation here.
-
 	log.SetFormatter(&log.JSONFormatter{})
 	// Output the stdout for capturing.
 	log.SetOutput(os.Stdout)
@@ -69,9 +67,7 @@ func main() {
 
 func launchTests(db dbpkg.CanaryStore, met *metrics.Node, vm *otto.Otto, config *canary.Config, configs []*js.TestConfig) {
 	for _, cfg := range configs {
-		for _, test := range cfg.Tests() {
-			go runTestForever(db, met, vm, cfg, test)
-		}
+		go runTestForever(db, met, vm, cfg, cfg.Test())
 	}
 }
 

@@ -22,15 +22,11 @@ type Test struct {
 	Script *otto.Script
 }
 
-func (cfg *TestConfig) Tests() []*Test {
-	var out []*Test
-
-	out = append(out, &Test{
+func (cfg *TestConfig) Test() *Test {
+	return &Test{
 		Name:   cfg.Name,
 		Script: cfg.Script,
-	})
-
-	return out
+	}
 }
 
 // A Context holds instantiated objects required to run a test.
